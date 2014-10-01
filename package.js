@@ -11,7 +11,3 @@ Package.on_use(function (api, where) {
   //api.export('Metadata');
 });
 
-//Package.on_test(function (api) {
-//  api.use(['tinytest']);
-//  api.add_files(['index.js', 'test.js'], 'server');
-//});
