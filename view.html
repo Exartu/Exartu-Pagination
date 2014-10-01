@@ -1,0 +1,19 @@
+<template name="paginationTemplate">
+    {{> UI.contentBlock context}}
+</template>
+
+<template name="fastPagination">
+    {{#paginationTemplate name=name}}
+        {{>defaultPagination .}}
+    {{/paginationTemplate}}
+</template>
+
+<template name="defaultPagination">
+    <ul class="pagination">
+        <li><a style="cursor: pointer" class="previous-page"> &lt; </a></li>
+        {{#each pages}}
+            <li class="{{#if isActive}} active {{/if}}"><a class="page-link" style="cursor: pointer">{{.}}</a></li>
+        {{/each}}
+        <li><a style="cursor: pointer" class="next-page"> &gt; </a></li>
+    </ul>
+</template>
