@@ -30,6 +30,7 @@ reactive.prototype = {
 
 // keeps all handlers created
 Hanlders = {};
+HandlersDep = new Deps.Dependency;
 /**
  * an extended handler
  * @param name
@@ -50,6 +51,7 @@ var PaginatedHandler = function(name, cb){
   });
 
   Hanlders[name] = self;
+  HandlersDep.changed();
 };
 PaginatedHandler.prototype.currentPage = function(){
   return this._page.get();
@@ -66,6 +68,19 @@ PaginatedHandler.prototype.setPage = function(page, cb){
   });
 
   self._page.set(page);
+};
+PaginatedHandler.prototype.prev = function(){
+  var self= this;
+  if (self.currentPage() > 1){
+    self.setPage(self.currentPage() - 1);
+  }
+
+};
+PaginatedHandler.prototype.next = function(){
+  var self= this;
+  if (self.currentPage() < self.pageCount()){
+    self.setPage(self.currentPage() + 1);
+  }
 };
 PaginatedHandler.prototype.stop = function(){
   return this.handler.stop();
@@ -86,7 +101,8 @@ PaginatedHandler.prototype.pageCount = function(){
 
 var Metadata = new Meteor.Collection('CollectionsMetadata');
 Meteor.autorun(function(){
-  if (_.every(Hanlders, function(handler) { return handler.ready })){
+  HandlersDep.depend();
+  if (_.keys(Hanlders).length > 0 && _.every(Hanlders, function(handler) { return handler.ready() })){
     Meteor.subscribe('CollectionsMetadata');
   }
 });

@@ -8,7 +8,7 @@ var defaultSettings = {
   pageSize: 100
 };
 
-//here I'll save info like the original cursor and the page size, etc
+//here I'll save info per user like the original cursor and the page size, etc
 var CollectionsMetadata = {};
 
 /**
@@ -24,9 +24,11 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
   var publicationName = settings.publicationName || collection._name;
 
   Meteor.publish(publicationName, function(page){
-    console.log('publicationName',publicationName);
+
     var originalCursor = fn.call(this);
-    CollectionsMetadata[publicationName] = { cursor: originalCursor, pageSize: settings.pageSize };
+    CollectionsMetadata[this.userId] = CollectionsMetadata[this.userId] || {};
+
+    CollectionsMetadata[this.userId][publicationName] = { cursor: originalCursor, pageSize: settings.pageSize };
     if (!originalCursor) return originalCursor;
 
     var selector = originalCursor._cursorDescription.selector;
@@ -47,7 +49,7 @@ Meteor.publish("CollectionsMetadata", function () {
   //todo: wait for CollectionsMetadata to be filled
   var self = this;
 
-  _.each(CollectionsMetadata, function(metadata, index){
+  _.each(CollectionsMetadata[this.userId], function(metadata, index){
     var cursor = metadata.cursor;
     if (cursor){
       var initializing = true;
