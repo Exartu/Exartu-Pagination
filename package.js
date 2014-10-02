@@ -2,12 +2,12 @@ Package.describe({
   summary: "pagination package from Uruworks"
 });
 
-Package.on_use(function (api, where) {
-  api.add_files(['server.js'], 'server');
-  api.add_files(['client.js'], 'client');
-  api.use(['templating','underscore'],'client');
-  api.add_files(['view.html'], 'client');
-  api.add_files(['view.js'], 'client');
+Package.onUse(function (api, where) {
+  api.addFiles(['server.js'], 'server');
+  api.addFiles(['client.js'], 'client');
+  api.use(['templating','underscore', 'deps'],'client');
+  api.addFiles(['view.html'], 'client');
+  api.addFiles(['view.js'], 'client');
   //api.export('Metadata');
 });
 
