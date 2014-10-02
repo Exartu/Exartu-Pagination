@@ -39,7 +39,6 @@ Template.defaultPagination.destroyed = function(){
   $(document).off('keydown',pager);
 };
 Template.defaultPagination.pages = function(){
-  console.log('pages', this.pages());
   return this.pages();
 };
 
