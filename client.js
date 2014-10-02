@@ -12,7 +12,7 @@ Meteor.paginatedSubscribe = function (name, cb) {
  * @param value - initial value
  * @constructor
  */
-var reactive = function(value){
+reactive = function(value){
   var self = this;
   self.value = value;
   self._dep = new Deps.Dependency;
@@ -85,7 +85,7 @@ PaginatedHandler.prototype.getFilter = function(){
   return this._filter.get();
 };
 PaginatedHandler.prototype.setFilter = function(obj, cb){
-  this._reRunSubscription(null, obj, cb)
+  this._reRunSubscription(1, obj, cb)
 };
 
 PaginatedHandler.prototype.prev = function(){

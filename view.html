@@ -9,11 +9,28 @@
 </template>
 
 <template name="defaultPagination">
-    <ul class="pagination">
-        <li><a style="cursor: pointer" class="previous-page"> &lt; </a></li>
-        {{#each pages}}
-            <li class="{{#if isActive}} active {{/if}}"><a class="page-link" style="cursor: pointer">{{.}}</a></li>
-        {{/each}}
-        <li><a style="cursor: pointer" class="next-page"> &gt; </a></li>
-    </ul>
+    <div class="pagination-container" style="width: 100%">
+        <ul class="pagination">
+
+            <li class="{{#if isInFirstPage}} disabled {{/if}}"><a style="cursor: pointer" class="previous-page" title="previous"> &lt; </a></li>
+
+            {{#if arePreviousPagesHiden}}
+                {{#with 1}}
+                    <li><a style="cursor: pointer" class="page-link" title=""> 1 </a></li>
+                {{/with}}
+                <li><a style="cursor: pointer" class="show-prev" title="show previous pages"> ... </a></li>
+            {{/if}}
+            {{#each pagesToDisplay}}
+                <li class="{{#if isActive}} active {{/if}}"><a class="page-link" style="cursor: pointer">{{.}}</a></li>
+            {{/each}}
+            {{#if areNextPagesHiden}}
+                <li><a style="cursor: pointer" class="show-next" title="show next pages"> ... </a></li>
+                {{#with lastPage}}
+                    <li><a style="cursor: pointer" class="page-link" title=""> {{.}} </a></li>
+                {{/with}}
+            {{/if}}
+
+            <li class="{{#if isInLastPage}} disabled {{/if}}"><a style="cursor: pointer" class="next-page" title="next"> &gt; </a></li>
+        </ul>
+    </div>
 </template>
