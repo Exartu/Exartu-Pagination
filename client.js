@@ -28,7 +28,7 @@ reactive.prototype = {
   }
 };
 
-// keeps all handlers created
+// keeps created handlers
 Hanlders = {};
 HandlersDep = new Deps.Dependency;
 /**
@@ -44,6 +44,7 @@ var PaginatedHandler = function(name, cb){
 
   self._page = new reactive(1);
   self._total = new reactive(0);
+  self._filter = new reactive({});
 
   self.handler = Meteor.subscribe(name, 1, function(){
     self._ready.set(true);
@@ -53,22 +54,40 @@ var PaginatedHandler = function(name, cb){
   Hanlders[name] = self;
   HandlersDep.changed();
 };
-PaginatedHandler.prototype.currentPage = function(){
-  return this._page.get();
-};
-PaginatedHandler.prototype.setPage = function(page, cb){
-  var self= this;
+PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
+  var self = this;
+
   self.handler.stop();
+  //self._ready.set(false);
 
-  self._ready.set(false);
+  //default to current values non-reactively
+  page = page || self._page.value;
+  filter = filter || self._filter.value;
 
-  self.handler = Meteor.subscribe(this.name, page, function(){
-    self._ready.set(true);
+  self.handler = Meteor.subscribe(this.name, page, filter, function(){
+    //self._ready.set(true);
+    HandlersDep.changed();
     cb && cb.call(this)
   });
 
   self._page.set(page);
+  self._filter.set(filter);
 };
+
+PaginatedHandler.prototype.currentPage = function(){
+  return this._page.get();
+};
+PaginatedHandler.prototype.setPage = function(page, cb){
+  this._reRunSubscription(page, null, cb);
+};
+
+PaginatedHandler.prototype.getFilter = function(){
+  return this._filter.get();
+};
+PaginatedHandler.prototype.setFilter = function(obj, cb){
+  this._reRunSubscription(null, obj, cb)
+};
+
 PaginatedHandler.prototype.prev = function(){
   var self= this;
   if (self.currentPage() > 1){
@@ -82,6 +101,7 @@ PaginatedHandler.prototype.next = function(){
     self.setPage(self.currentPage() + 1);
   }
 };
+
 PaginatedHandler.prototype.stop = function(){
   return this.handler.stop();
 };
@@ -94,6 +114,7 @@ PaginatedHandler.prototype.totalCount = function(){
   var metadata = Metadata.findOne(this.name);
   return metadata && metadata.count;
 };
+
 PaginatedHandler.prototype.pageCount = function(){
   var metadata = Metadata.findOne(this.name);
   return metadata && Math.ceil(metadata.count / metadata.pageSize);

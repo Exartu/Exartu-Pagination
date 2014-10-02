@@ -23,16 +23,26 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
   var publicationName = settings.publicationName || collection._name;
 
-  Meteor.publish(publicationName, function(page){
+  Meteor.publish(publicationName, function(page, clientFilter){
 
     var originalCursor = fn.call(this);
-    CollectionsMetadata[this.userId] = CollectionsMetadata[this.userId] || {};
 
-    CollectionsMetadata[this.userId][publicationName] = { cursor: originalCursor, pageSize: settings.pageSize };
+    CollectionsMetadata[this.userId] = CollectionsMetadata[this.userId] || {};
+    var metadata = CollectionsMetadata[this.userId];
+
+    metadata[publicationName] = metadata[publicationName] || {};
+    metadata[publicationName].cursor = originalCursor;
+    metadata[publicationName].pageSize = settings.pageSize;
+
     if (!originalCursor) return originalCursor;
 
-    var selector = originalCursor._cursorDescription.selector;
+    //get client filter and extend it with the server defined selectors
+    var selector = clientFilter || {};
+    _.extend(selector, originalCursor._cursorDescription.selector);
     var options = originalCursor._cursorDescription.options || {};
+
+    metadata[publicationName].finalCursor = collection.find(selector);
+    metadata[publicationName].onChanged && metadata[publicationName].onChanged();
 
     //add skip and limit
     page = (isInt(page) && page > 0) ? page : 1;
@@ -46,32 +56,37 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
 //publish pageSize and cursor's total count
 Meteor.publish("CollectionsMetadata", function () {
-  //todo: wait for CollectionsMetadata to be filled
   var self = this;
 
   _.each(CollectionsMetadata[this.userId], function(metadata, index){
-    var cursor = metadata.cursor;
-    if (cursor){
+    var originalCursor = metadata.cursor;
+    if (originalCursor){
       var initializing = true;
 
-      var handle = cursor.observeChanges({
+      var handle = originalCursor.observeChanges({
         added: function (id) {
           //avoid to notify all added changes when it starts
           if (!initializing)
-            self.changed("CollectionsMetadata", index, {count: cursor.count()});
+            self.changed("CollectionsMetadata", index, {count: originalCursor.count()});
         },
         removed: function (id) {
-          self.changed("CollectionsMetadata", index, {count: cursor.count()});
+          self.changed("CollectionsMetadata", index, {count: originalCursor.count()});
         }
       });
       initializing = false;
       //send initial values
-      self.added("CollectionsMetadata",  index, {count: cursor.count(), pageSize: metadata.pageSize});
+      self.added("CollectionsMetadata",  index, {count: originalCursor.count(), pageSize: metadata.pageSize});
 
       self.ready();
       self.onStop(function () {
         handle.stop();
       });
+
+      //when the client change the filter, update the count info
+      CollectionsMetadata[self.userId][index].onChanged = function(){
+        self.changed("CollectionsMetadata", index, {count: metadata.finalCursor.count()});
+      };
+
     }else{
       return false;
     }
