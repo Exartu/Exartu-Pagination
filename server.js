@@ -38,23 +38,39 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     //get client filter and extend it with the server defined selectors
     var selector = clientFilter || {};
-    _.extend(selector, originalCursor._cursorDescription.selector);
-    var options = originalCursor._cursorDescription.options || {};
-
-    metadata[publicationName].finalCursor = collection.find(selector);
-    metadata[publicationName].onChanged && metadata[publicationName].onChanged();
 
     //add skip and limit
     page = (isInt(page) && page > 0) ? page : 1;
-    options.skip = (page -1) * settings.pageSize;
-    options.limit = settings.pageSize;
+    var options = {
+      skip: (page - 1) * settings.pageSize,
+      limit: settings.pageSize
+    }
 
-    return collection.find(selector, options);
+    if (collection instanceof View){
+      //Handle a ViewCursor
+      _.extend(originalCursor.options, options);
+      collection.publishCursor(originalCursor, this, publicationName);
+
+    }else{
+      //Handle a regular mongo cursor
+
+      _.extend(selector, originalCursor._cursorDescription.selector);
+
+      options = _.extend(originalCursor._cursorDescription.options || {}, options);
+
+      metadata[publicationName].finalCursor = collection.find(selector);
+      metadata[publicationName].onChanged && metadata[publicationName].onChanged();
+
+      return collection.find(selector, options);
+
+    }
+
   })
 };
 
 
 //publish pageSize and cursor's total count
+//todo: make this reactive to CollectionsMetadata object. ie: publish the metadata of a Collection after the user subscribe to it
 Meteor.publish("CollectionsMetadata", function () {
   var self = this;
 

@@ -23,8 +23,10 @@ reactive.prototype = {
     return this.value;
   },
   set: function(newVal){
-    this._dep.changed();
-    this.value = newVal;
+    if (this.value !== newVal){
+      this._dep.changed();
+      this.value = newVal;
+    }
   }
 };
 
@@ -54,15 +56,18 @@ var PaginatedHandler = function(name, cb){
   Hanlders[name] = self;
   HandlersDep.changed();
 };
+
 PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
   var self = this;
 
   self.handler.stop();
-  //self._ready.set(false);
+  //self._ready.set(false); //should I change this value to make iron-router re-render?
 
   //default to current values non-reactively
   page = page || self._page.value;
   filter = filter || self._filter.value;
+
+  if (self._page.value == page && self._filter.value == filter) return;
 
   self.handler = Meteor.subscribe(this.name, page, filter, function(){
     //self._ready.set(true);
@@ -121,6 +126,8 @@ PaginatedHandler.prototype.pageCount = function(){
 };
 
 var Metadata = new Meteor.Collection('CollectionsMetadata');
+
+//this autorun should not be necessary if the server add records to the subscription properly,
 Meteor.autorun(function(){
   HandlersDep.depend();
   if (_.keys(Hanlders).length > 0 && _.every(Hanlders, function(handler) { return handler.ready() })){

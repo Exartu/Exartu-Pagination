@@ -1,4 +1,3 @@
-
 Template.paginationTemplate.context = function () {
   var handler= Hanlders[this.name];
 
@@ -15,12 +14,7 @@ Template.paginationTemplate.context = function () {
     }
 };
 
-
-
-
-
-
-var pager = function (e) {
+var keyListener = function (e) {
   if (e.target.tagName == 'INPUT') return;
 
   switch(e.which) {
@@ -36,19 +30,26 @@ var pager = function (e) {
   }
   e.preventDefault(); // prevent the default action (scroll / move caret)
 };
+
 Template.defaultPagination.rendered = function(){
-  var width = this.$('.pagination-container').width();
-  width -= 43 * 5;
-  limit = Math.trunc(width/43);
+  var container = this.$('.pagination-container');
+  var containerWidth = container.width();
+  var itemWidth = 43; //the width of the links to pages with 2 digits
+  containerWidth -= itemWidth * 6; //at most 6 extra links (next, prev, showNext, showPrev, first and last)
+  limit = Math.trunc(containerWidth/itemWidth);
 }
 Template.defaultPagination.created = function(){
-  pager = _.bind(pager, this)
-  $(document).keydown(pager);
+  if (this.data.useKeys) {
+    keyListener = _.bind(keyListener, this)
+    $(document).keydown(keyListener);
+  }
 
   var self = this.data;
+
+  //auto slice pagesToShow to fit in one line
   Meteor.autorun(function(){
     var aux = self.pages();
-    var current = self.handler.currentPage()
+    var current = self.handler.currentPage();
 
     if (aux.length > limit){
       var min = 0;
@@ -64,23 +65,36 @@ Template.defaultPagination.created = function(){
     pagesToShow.set(aux);
   })
 };
+
 Template.defaultPagination.destroyed = function(){
-  $(document).off('keydown',pager);
+  if (this.data.useKeys){
+    $(document).off('keydown', keyListener);
+  }
 };
+
 var pagesToShow = new reactive([]);
 var limit = 10;
+
 Template.defaultPagination.helpers({
+  hasPages: function () {
+    var pages = this.pages();
+    return pages.length > 1;
+  },
+  isActive : function(){
+    var tmplCtx = UI._parentData(1);
+    return this.valueOf() == tmplCtx.handler.currentPage();
+  },
   pagesToDisplay: function(){
     return pagesToShow.get();
   },
   isInFirstPage: function () {
     return this.handler.currentPage() == 1;
   },
-  arePreviousPagesHiden: function () {
+  arePreviousPagesHidden: function () {
     var aux = pagesToShow.get();
     return aux && aux.length && aux[0]>1;
   },
-  areNextPagesHiden: function () {
+  areNextPagesHidden: function () {
     var aux = pagesToShow.get();
     return aux && aux.length && (aux[aux.length - 1] < this.pages().length);
 
@@ -94,10 +108,6 @@ Template.defaultPagination.helpers({
   }
 });
 
-Template.defaultPagination.isActive = function(){
-  var tmplCtx = UI._parentData(1);
-  return this.valueOf() == tmplCtx.handler.currentPage();
-}
 Template.defaultPagination.events({
   'click .page-link': function(e, ctx){
     ctx.data.handler.setPage(this.valueOf());

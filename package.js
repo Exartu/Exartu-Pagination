@@ -3,11 +3,12 @@ Package.describe({
 });
 
 Package.onUse(function (api, where) {
+  api.use(['templating','underscore', 'deps'],'client');
+  api.use('mongoview','server',{ weak: true });
+
   api.addFiles(['server.js'], 'server');
   api.addFiles(['client.js'], 'client');
-  api.use(['templating','underscore', 'deps'],'client');
   api.addFiles(['view.html'], 'client');
   api.addFiles(['view.js'], 'client');
-  //api.export('Metadata');
 });
 
