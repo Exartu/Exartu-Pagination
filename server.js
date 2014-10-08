@@ -44,25 +44,21 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
     var options = {
       skip: (page - 1) * settings.pageSize,
       limit: settings.pageSize
-    }
+    };
+
+    _.extend(selector, originalCursor._cursorDescription.selector);
+    options = _.extend(originalCursor._cursorDescription.options || {}, options);
+
+    metadata[publicationName].finalCursor = collection.find(selector);
+    metadata[publicationName].onChanged && metadata[publicationName].onChanged();
 
     if (collection instanceof View){
       //Handle a ViewCursor
-      _.extend(originalCursor.options, options);
       collection.publishCursor(originalCursor, this, publicationName);
 
     }else{
       //Handle a regular mongo cursor
-
-      _.extend(selector, originalCursor._cursorDescription.selector);
-
-      options = _.extend(originalCursor._cursorDescription.options || {}, options);
-
-      metadata[publicationName].finalCursor = collection.find(selector);
-      metadata[publicationName].onChanged && metadata[publicationName].onChanged();
-
       return collection.find(selector, options);
-
     }
 
   })
