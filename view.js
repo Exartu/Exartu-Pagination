@@ -1,16 +1,17 @@
 Template.paginationTemplate.context = function () {
   var handler= Hanlders[this.name];
-
   return {
-      pages: function() {
-        var pages = [];
-        for (var i = 1; i <= handler.pageCount(); i++) {
-          pages.push(i);
-        }
-        return pages;
-      },
+      //pages: function() {
+      //  console.log('pages', handler.pageCount());
+      //  var pages = [];
+      //  for (var i = 1; i <= handler.pageCount(); i++) {
+      //    pages.push(i);
+      //  }
+      //  return pages;
+      //},
       name: this.name,
-      handler: handler
+      handler: handler,
+      useKeys: this.useKeys
     }
 };
 
@@ -48,19 +49,21 @@ Template.defaultPagination.created = function(){
 
   //auto slice pagesToShow to fit in one line
   Meteor.autorun(function(){
-    var aux = self.pages();
+    var pageCount = self.handler.pageCount();
     var current = self.handler.currentPage();
-
-    if (aux.length > limit){
+    var aux;
+    if (pageCount > limit){
       var min = 0;
       if (current > limit/2){
-        if (current >  aux.length - limit/2){
-          min = aux.length - limit;
+        if (current >  pageCount - limit/2){
+          min = pageCount - limit;
         }else{
-          min = current - limit/2;
+          min = Math.trunc(current - limit/2);
         }
       }
-      aux = aux.slice(min, Math.max(limit, limit/2 + current));
+      aux = getIntArray(min + 1, min + 1 + limit);
+    }else{
+      aux = getIntArray(1, pageCount);
     }
     pagesToShow.set(aux);
   })
@@ -77,8 +80,7 @@ var limit = 10;
 
 Template.defaultPagination.helpers({
   hasPages: function () {
-    var pages = this.pages();
-    return pages.length > 1;
+    return this.handler.pageCount() > 1;
   },
   isActive : function(){
     var tmplCtx = UI._parentData(1);
@@ -92,19 +94,18 @@ Template.defaultPagination.helpers({
   },
   arePreviousPagesHidden: function () {
     var aux = pagesToShow.get();
-    return aux && aux.length && aux[0]>1;
+    return aux && aux.length && aux[0] > 1;
   },
   areNextPagesHidden: function () {
     var aux = pagesToShow.get();
-    return aux && aux.length && (aux[aux.length - 1] < this.pages().length);
+    return aux && aux.length && (aux[aux.length - 1] < this.handler.pageCount());
 
   },
   isInLastPage: function () {
     return this.handler.currentPage() == this.handler.pageCount();
   },
   lastPage: function(){
-    var pages = this.pages();
-    return pages.length;
+    return this.handler.pageCount();
   }
 });
 
@@ -119,15 +120,23 @@ Template.defaultPagination.events({
     ctx.data.handler.next();
   },
   'click .show-prev': function(e, ctx){
-    var allpages = ctx.data.pages();
     var shown = pagesToShow.get();
     var min = Math.max(0, shown[0] - limit);
-    pagesToShow.set(allpages.slice(min, min + limit));
+    pagesToShow.set(getIntArray(min, min + limit));
   },
   'click .show-next': function(e, ctx){
-    var allpages = ctx.data.pages();
+    var pageCount = ctx.data.handler.pageCount();
     var shown = pagesToShow.get();
-    var min = Math.min(allpages.length - limit, shown[shown.length - 1]);
-    pagesToShow.set(allpages.slice(min, min + limit));
+    var min = Math.min(pageCount - limit, shown[shown.length - 1]);
+    min = min + 1;
+    pagesToShow.set(getIntArray(min, min + limit));
   }
 });
+
+var getIntArray = function(min, max){
+  var result = [];
+  for (var i = min; i < max; ++i){
+    result.push(i);
+  }
+  return result;
+}
