@@ -47,6 +47,7 @@ var PaginatedHandler = function(name, cb){
   self._page = new reactive(1);
   self._total = new reactive(0);
   self._filter = new reactive({});
+  self._isLoading = new reactive(false);
 
   self.handler = Meteor.subscribe(name, 1, function(){
     self._ready.set(true);
@@ -57,11 +58,8 @@ var PaginatedHandler = function(name, cb){
   HandlersDep.changed();
 };
 
-PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
+PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb, notStopSubscription) {
   var self = this;
-
-  self.handler.stop();
-  //self._ready.set(false); //should I change this value to make iron-router re-render?
 
   //default to current values non-reactively
   page = page || self._page.value;
@@ -69,8 +67,14 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
 
   if (self._page.value == page && self._filter.value == filter) return;
 
+  ! notStopSubscription && self.handler.stop();
+
+  //self._ready.set(false); //should I change this value to make iron-router re-render?
+  self._isLoading.set(true);
   self.handler = Meteor.subscribe(this.name, page, filter, function(){
     //self._ready.set(true);
+    self._isLoading.set(false);
+
     HandlersDep.changed();
     cb && cb.call(this)
   });
@@ -107,6 +111,19 @@ PaginatedHandler.prototype.next = function(){
   }
 };
 
+PaginatedHandler.prototype.loadMore = function(cb){
+  var total = this.totalCount();
+  var metadata = Metadata.findOne(this.name);
+  var current = this.currentCount();
+
+  if (total == current) return;
+
+  this._reRunSubscription(current + metadata.pageSize, null, cb, true);
+};
+
+PaginatedHandler.prototype.isLoading = function () {
+  return this._isLoading.get()
+}
 PaginatedHandler.prototype.stop = function(){
   return this.handler.stop();
 };
@@ -115,22 +132,27 @@ PaginatedHandler.prototype.ready = function(){
 };
 
 
+PaginatedHandler.prototype.isInfiniteScroll = function(){
+  var metadata = Metadata.findOne(this.name);
+  return metadata && metadata.infiniteScroll;
+};
 PaginatedHandler.prototype.totalCount = function(){
   var metadata = Metadata.findOne(this.name);
   return metadata && metadata.count;
 };
-
 PaginatedHandler.prototype.pageCount = function(){
   var metadata = Metadata.findOne(this.name);
   return metadata && Math.ceil(metadata.count / metadata.pageSize);
 };
+PaginatedHandler.prototype.currentCount = function(){
+  try{
+    return Meteor.connection._mongo_livedata_collections[this.name].find().count();
+  }catch (e){
+    console.error(e)
+    return;
+  }
+};
 
 var Metadata = new Meteor.Collection('CollectionsMetadata');
 
-//this autorun should not be necessary if the server add records to the subscription properly,
-Meteor.autorun(function(){
-  HandlersDep.depend();
-  if (_.keys(Hanlders).length > 0 && _.every(Hanlders, function(handler) { return handler.ready() })){
-    Meteor.subscribe('CollectionsMetadata');
-  }
-});
+Meteor.subscribe('CollectionsMetadata');

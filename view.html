@@ -3,11 +3,17 @@
 </template>
 
 <template name="fastPagination">
-    {{#paginationTemplate name=name useKeys=useKeys}}
-        {{>defaultPagination .}}
+    {{#paginationTemplate .}}
+        {{>defaultView .}}
     {{/paginationTemplate}}
 </template>
-
+<template name="defaultView">
+    {{#if isInfiniteScroll}}
+        {{>defaultInfiniteScroll .}}
+    {{else}}
+        {{>defaultPagination .}}
+    {{/if}}
+</template>
 <template name="defaultPagination">
     <div class="pagination-container" style="width: 100%">
         {{#if hasPages}}
@@ -40,4 +46,10 @@
         </ul>
         {{/if}}
     </div>
+</template>
+
+<template name="defaultInfiniteScroll">
+    {{#if isLoading}}
+        {{> UI.dynamic template=loadingTemplate}}
+    {{/if}}
 </template>

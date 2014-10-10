@@ -1,18 +1,9 @@
 Template.paginationTemplate.context = function () {
-  var handler= Hanlders[this.name];
-  return {
-      //pages: function() {
-      //  console.log('pages', handler.pageCount());
-      //  var pages = [];
-      //  for (var i = 1; i <= handler.pageCount(); i++) {
-      //    pages.push(i);
-      //  }
-      //  return pages;
-      //},
-      name: this.name,
-      handler: handler,
-      useKeys: this.useKeys
-    }
+  this.handler= Hanlders[this.name];
+  return this;
+};
+Template.defaultView.isInfiniteScroll= function(){
+  return this.handler.isInfiniteScroll();
 };
 
 var keyListener = function (e) {
@@ -139,4 +130,25 @@ var getIntArray = function(min, max){
     result.push(i);
   }
   return result;
+}
+
+
+var scrollListener = function(e){
+
+  var elem = $(this.container || window);
+
+  if(elem.scrollTop() + elem.height() > $(this.content || document).height() - 100){
+    this.handler.loadMore();
+  }
+};
+Template.defaultInfiniteScroll.created = function(){
+  scrollListener = _.debounce(_.bind(scrollListener, this.data), 300);
+  $(this.data.container || window).on("scroll", scrollListener)
+};
+Template.defaultInfiniteScroll.destroyed = function(){
+  $(this.data.container || window).off("scroll", scrollListener)
+
+};
+Template.defaultInfiniteScroll.isLoading = function () {
+  return this.handler.isLoading();
 }

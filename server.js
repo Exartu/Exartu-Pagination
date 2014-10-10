@@ -5,7 +5,8 @@ var isInt = function(obj){
 
 //default settings, todo:make this editable through some api
 var defaultSettings = {
-  pageSize: 100
+  pageSize: 100,
+  infiniteScroll: false
 };
 
 //here I'll save info per user like the original cursor and the page size, etc
@@ -24,6 +25,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
   var publicationName = settings.publicationName || collection._name;
 
   Meteor.publish(publicationName, function(page, clientFilter){
+    console.log('publishing', publicationName);
 
     var originalCursor = fn.call(this);
 
@@ -33,6 +35,8 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
     metadata[publicationName] = metadata[publicationName] || {};
     metadata[publicationName].cursor = originalCursor;
     metadata[publicationName].pageSize = settings.pageSize;
+    metadata[publicationName].infiniteScroll = settings.infiniteScroll;
+    metadata[publicationName].name = publicationName;
 
     if (!originalCursor) return originalCursor;
 
@@ -40,17 +44,32 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
     var selector = clientFilter || {};
 
     //add skip and limit
-    page = (isInt(page) && page > 0) ? page : 1;
-    var options = {
-      skip: (page - 1) * settings.pageSize,
-      limit: settings.pageSize
-    };
+    if (settings.infiniteScroll){
+      //if it use infiniteScroll page means total count
+      var count = (isInt(page) && page > settings.pageSize) ? page : settings.pageSize;
+      console.log('count',count);
+      var options = {
+        skip: 0,
+        limit: count
+      };
+    }else{
+      page = (isInt(page) && page > 0) ? page : 1;
+      var options = {
+        skip: (page - 1) * settings.pageSize,
+        limit: settings.pageSize
+      };
+    }
 
     _.extend(selector, originalCursor._cursorDescription.selector);
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
 
     metadata[publicationName].finalCursor = collection.find(selector);
-    metadata[publicationName].onChanged && metadata[publicationName].onChanged();
+
+    //notify that CollectionsMetadata has changed. todo: it must be a better way of doing all this
+    metadata[publicationName].onFinalCursorChanged && metadata[publicationName].onFinalCursorChanged();
+    if (metadata.onSubscriptionAdded){
+      metadata.onSubscriptionAdded(metadata[publicationName]);
+    }
 
     if (collection instanceof View){
       //Handle a ViewCursor
@@ -65,12 +84,15 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 };
 
 
-//publish pageSize and cursor's total count
-//todo: make this reactive to CollectionsMetadata object. ie: publish the metadata of a Collection after the user subscribe to it
+//publish pageSize and cursor's total count, etc
 Meteor.publish("CollectionsMetadata", function () {
   var self = this;
 
-  _.each(CollectionsMetadata[this.userId], function(metadata, index){
+  //console.log('CollectionsMetadata',CollectionsMetadata);
+
+  _.each(CollectionsMetadata[self.userId], function(metadata, index){
+    console.log('init', metadata.name);
+
     var originalCursor = metadata.cursor;
     if (originalCursor){
       var initializing = true;
@@ -87,7 +109,7 @@ Meteor.publish("CollectionsMetadata", function () {
       });
       initializing = false;
       //send initial values
-      self.added("CollectionsMetadata",  index, {count: originalCursor.count(), pageSize: metadata.pageSize});
+      self.added("CollectionsMetadata",  index, {count: originalCursor.count(), pageSize: metadata.pageSize, infiniteScroll: metadata.infiniteScroll});
 
       self.ready();
       self.onStop(function () {
@@ -95,7 +117,7 @@ Meteor.publish("CollectionsMetadata", function () {
       });
 
       //when the client change the filter, update the count info
-      CollectionsMetadata[self.userId][index].onChanged = function(){
+      CollectionsMetadata[self.userId][index].onFinalCursorChanged = function(){
         self.changed("CollectionsMetadata", index, {count: metadata.finalCursor.count()});
       };
 
@@ -103,4 +125,13 @@ Meteor.publish("CollectionsMetadata", function () {
       return false;
     }
   });
+  CollectionsMetadata[self.userId] = CollectionsMetadata[self.userId] || {};
+
+  //the user's subscriptions can come in any order
+  // so it's likely that a new paginated subscription to run after I have published CollectionsMetadata.
+  // This probably is not the best way to add the new item (the same with onChanged) but it works for now
+  CollectionsMetadata[self.userId].onSubscriptionAdded = function(metadata){
+    console.log('onSubscriptionAdded', metadata.name);
+    self.added("CollectionsMetadata", metadata.name, {count: metadata.cursor && metadata.cursor.count(), pageSize: metadata.pageSize, infiniteScroll: metadata.infiniteScroll});
+  };
 });
