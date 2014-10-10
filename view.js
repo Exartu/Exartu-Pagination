@@ -54,7 +54,7 @@ Template.defaultPagination.created = function(){
       }
       aux = getIntArray(min + 1, min + 1 + limit);
     }else{
-      aux = getIntArray(1, pageCount);
+      aux = getIntArray(1, pageCount + 1);
     }
     pagesToShow.set(aux);
   })
