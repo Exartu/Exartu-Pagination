@@ -25,8 +25,6 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
   var publicationName = settings.publicationName || collection._name;
 
   Meteor.publish(publicationName, function(page, clientFilter){
-    console.log('publishing', publicationName);
-
     var originalCursor = fn.call(this);
 
     CollectionsMetadata[this.userId] = CollectionsMetadata[this.userId] || {};
@@ -47,7 +45,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
     if (settings.infiniteScroll){
       //if it use infiniteScroll page means total count
       var count = (isInt(page) && page > settings.pageSize) ? page : settings.pageSize;
-      console.log('count',count);
+
       var options = {
         skip: 0,
         limit: count
@@ -88,10 +86,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 Meteor.publish("CollectionsMetadata", function () {
   var self = this;
 
-  //console.log('CollectionsMetadata',CollectionsMetadata);
-
   _.each(CollectionsMetadata[self.userId], function(metadata, index){
-    console.log('init', metadata.name);
 
     var originalCursor = metadata.cursor;
     if (originalCursor){
@@ -131,7 +126,6 @@ Meteor.publish("CollectionsMetadata", function () {
   // so it's likely that a new paginated subscription to run after I have published CollectionsMetadata.
   // This probably is not the best way to add the new item (the same with onChanged) but it works for now
   CollectionsMetadata[self.userId].onSubscriptionAdded = function(metadata){
-    console.log('onSubscriptionAdded', metadata.name);
     self.added("CollectionsMetadata", metadata.name, {count: metadata.cursor && metadata.cursor.count(), pageSize: metadata.pageSize, infiniteScroll: metadata.infiniteScroll});
   };
 });
