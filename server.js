@@ -25,7 +25,6 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
   var publicationName = settings.publicationName || collection._name;
 
   Meteor.publish(publicationName, function(page, clientFilter){
-    console.log('clientFilter',clientFilter);
     var originalCursor = fn.call(this);
 
     CollectionsMetadata[this.userId] = CollectionsMetadata[this.userId] || {};
@@ -61,7 +60,6 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     _.extend(selector, originalCursor._cursorDescription.selector);
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
-    console.log('selector',selector)
     var finalCursor = collection.find(selector);
     metadata[publicationName].finalCursor = finalCursor;
 
@@ -115,7 +113,6 @@ Meteor.publish("CollectionsMetadata", function () {
 
       //when the client change the filter, update the count info
       CollectionsMetadata[self.userId][index].onFinalCursorChanged = function(){
-        console.log('onFinalCursorChanged');
         self.changed("CollectionsMetadata", index, {count: metadata.finalCursor.count()});
       };
 
