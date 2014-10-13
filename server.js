@@ -60,7 +60,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     _.extend(selector, originalCursor._cursorDescription.selector);
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
-    var finalCursor = collection.find(selector);
+    var finalCursor = collection.find(selector, options);
     metadata[publicationName].finalCursor = finalCursor;
 
     //notify that CollectionsMetadata has changed. todo: it must be a better way of doing all this
@@ -127,5 +127,6 @@ Meteor.publish("CollectionsMetadata", function () {
   // This probably is not the best way to add the new item (the same with onChanged) but it works for now
   CollectionsMetadata[self.userId].onSubscriptionAdded = function(metadata){
     self.added("CollectionsMetadata", metadata.name, {count: metadata.finalCursor && metadata.finalCursor.count(), pageSize: metadata.pageSize, infiniteScroll: metadata.infiniteScroll});
+    //CollectionsMetadata[self.userId].onSubscriptionAdded = null;
   };
 });
