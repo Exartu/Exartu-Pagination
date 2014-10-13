@@ -25,6 +25,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
   var publicationName = settings.publicationName || collection._name;
 
   Meteor.publish(publicationName, function(page, clientFilter){
+    console.log('clientFilter',clientFilter);
     var originalCursor = fn.call(this);
 
     CollectionsMetadata[this.userId] = CollectionsMetadata[this.userId] || {};
@@ -40,19 +41,19 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     //get client filter and extend it with the server defined selectors
     var selector = clientFilter || {};
-
+    var options = {};
     //add skip and limit
     if (settings.infiniteScroll){
       //if it use infiniteScroll page means total count
       var count = (isInt(page) && page > settings.pageSize) ? page : settings.pageSize;
 
-      var options = {
+      options = {
         skip: 0,
         limit: count
       };
     }else{
       page = (isInt(page) && page > 0) ? page : 1;
-      var options = {
+      options = {
         skip: (page - 1) * settings.pageSize,
         limit: settings.pageSize
       };
@@ -60,8 +61,9 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     _.extend(selector, originalCursor._cursorDescription.selector);
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
-
-    metadata[publicationName].finalCursor = collection.find(selector);
+    console.log('selector',selector)
+    var finalCursor = collection.find(selector);
+    metadata[publicationName].finalCursor = finalCursor;
 
     //notify that CollectionsMetadata has changed. todo: it must be a better way of doing all this
     metadata[publicationName].onFinalCursorChanged && metadata[publicationName].onFinalCursorChanged();
@@ -71,7 +73,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     if (collection instanceof View){
       //Handle a ViewCursor
-      collection.publishCursor(originalCursor, this, publicationName);
+      collection.publishCursor(finalCursor, this, publicationName);
 
     }else{
       //Handle a regular mongo cursor
@@ -113,6 +115,7 @@ Meteor.publish("CollectionsMetadata", function () {
 
       //when the client change the filter, update the count info
       CollectionsMetadata[self.userId][index].onFinalCursorChanged = function(){
+        console.log('onFinalCursorChanged');
         self.changed("CollectionsMetadata", index, {count: metadata.finalCursor.count()});
       };
 
@@ -126,6 +129,6 @@ Meteor.publish("CollectionsMetadata", function () {
   // so it's likely that a new paginated subscription to run after I have published CollectionsMetadata.
   // This probably is not the best way to add the new item (the same with onChanged) but it works for now
   CollectionsMetadata[self.userId].onSubscriptionAdded = function(metadata){
-    self.added("CollectionsMetadata", metadata.name, {count: metadata.cursor && metadata.cursor.count(), pageSize: metadata.pageSize, infiniteScroll: metadata.infiniteScroll});
+    self.added("CollectionsMetadata", metadata.name, {count: metadata.finalCursor && metadata.finalCursor.count(), pageSize: metadata.pageSize, infiniteScroll: metadata.infiniteScroll});
   };
 });
