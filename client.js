@@ -58,7 +58,7 @@ var PaginatedHandler = function(name, cb){
   HandlersDep.changed();
 };
 
-PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb, notStopSubscription) {
+PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
   var self = this;
 
   //default to current values non-reactively
@@ -67,7 +67,7 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb, notS
 
   if (self._page.value == page && self._filter.value == filter) return;
 
-  ! notStopSubscription && self.handler.stop();
+  if (! self.isInfiniteScroll()) self.handler.stop();
 
   //self._ready.set(false); //should I change this value to make iron-router re-render?
   self._isLoading.set(true);
@@ -118,7 +118,7 @@ PaginatedHandler.prototype.loadMore = function(cb){
 
   if (total == current) return;
 
-  this._reRunSubscription(current + metadata.pageSize, null, cb, true);
+  this._reRunSubscription(current + metadata.pageSize, null, cb);
 };
 
 PaginatedHandler.prototype.isLoading = function () {
