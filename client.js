@@ -65,7 +65,7 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
   page = page || self._page.value;
   filter = filter || self._filter.value;
 
-  if (self._page.value == page && self._filter.value == filter) return;
+  if (self._page.value == page && _.isEqual(self._filter.value, filter)) return;
 
   if (! self.isInfiniteScroll()) self.handler.stop();
 
