@@ -32,7 +32,6 @@ reactive.prototype = {
 
 // keeps created handlers
 Hanlders = {};
-HandlersDep = new Deps.Dependency;
 /**
  * an extended handler
  * @param name
@@ -55,7 +54,6 @@ var PaginatedHandler = function(name, cb){
   });
 
   Hanlders[name] = self;
-  HandlersDep.changed();
 };
 
 PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
@@ -69,18 +67,18 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
 
   if (! self.isInfiniteScroll()) self.handler.stop();
 
-  //self._ready.set(false); //should I change this value to make iron-router re-render?
-  self._isLoading.set(true);
-  self.handler = Meteor.subscribe(this.name, page, filter, function(){
-    //self._ready.set(true);
-    self._isLoading.set(false);
+  //defer execution of subscription so that the stop called above has time to wipe the collection
+  //if I execute subscribe right after a stop the subscription is ignored
+  _.defer(function() {
+    self._isLoading.set(true);
+    self.handler = Meteor.subscribe(self.name, page, filter, function () {
+        self._isLoading.set(false);
+        cb && cb.call(this)
+    });
 
-    HandlersDep.changed();
-    cb && cb.call(this)
+    self._page.set(page);
+    self._filter.set(filter);
   });
-
-  self._page.set(page);
-  self._filter.set(filter);
 };
 
 PaginatedHandler.prototype.currentPage = function(){
