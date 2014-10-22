@@ -28,7 +28,7 @@ Template.defaultPagination.rendered = function(){
   var containerWidth = container.width();
   var itemWidth = 43; //the width of the links to pages with 2 digits
   containerWidth -= itemWidth * 6; //at most 6 extra links (next, prev, showNext, showPrev, first and last)
-  limit = Math.trunc(containerWidth/itemWidth);
+  limit = Math.floor(containerWidth/itemWidth);
 }
 Template.defaultPagination.created = function(){
   if (this.data.useKeys) {
@@ -49,7 +49,7 @@ Template.defaultPagination.created = function(){
         if (current >  pageCount - limit/2){
           min = pageCount - limit;
         }else{
-          min = Math.trunc(current - limit/2);
+          min = Math.floor(current - limit/2);
         }
       }
       aux = getIntArray(min + 1, min + 1 + limit);
