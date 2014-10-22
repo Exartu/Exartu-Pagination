@@ -64,20 +64,10 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     Metadata.add(metadata);
 
-    ////notify that CollectionsMetadata has changed. todo: it must be a better way of doing all this
-    //metadata[publicationName].onFinalCursorChanged && metadata[publicationName].onFinalCursorChanged();
-    //if (metadata.onSubscriptionAdded){
-    //  metadata.onSubscriptionAdded(metadata[publicationName]);
+    //if (settings.extraCursors){
+    //  return settings.extraCursors(collection.find(selector, options))
     //}
-
-    if (collection instanceof View){
-      //Handle a ViewCursor
-      collection.publishCursor(finalCursor, this, publicationName);
-
-    }else{
-      //Handle a regular mongo cursor
-      return collection.find(selector, options);
-    }
+    return finalCursor;
 
   })
 };
