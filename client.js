@@ -47,6 +47,7 @@ var PaginatedHandler = function(name, cb){
   self._total = new reactive(0);
   self._filter = new reactive({});
   self._isLoading = new reactive(false);
+  self._locked = false;
 
   self.handler = Meteor.subscribe(name, 1, function(){
     self._ready.set(true);
@@ -64,16 +65,23 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
   filter = filter || self._filter.value;
 
   if (self._page.value == page && _.isEqual(self._filter.value, filter)) return;
+  self._isLoading.set(true);
+
+  if (self._locked){
+    return;
+  }
+
+  self._locked = true;
 
   if (! self.isInfiniteScroll()) self.handler.stop();
 
   //defer execution of subscription so that the stop called above has time to wipe the collection
   //if I execute subscribe right after a stop the subscription is ignored
   _.defer(function() {
-    self._isLoading.set(true);
     self.handler = Meteor.subscribe(self.name, page, filter, function () {
-        self._isLoading.set(false);
-        cb && cb.call(this)
+      self._locked = false;
+      self._isLoading.set(false);
+      cb && cb.call(this)
     });
 
     self._page.set(page);
@@ -92,6 +100,8 @@ PaginatedHandler.prototype.getFilter = function(){
   return this._filter.get();
 };
 PaginatedHandler.prototype.setFilter = function(obj, cb){
+  if (_.isEqual(this._filter.value, obj)) return;
+
   this._reRunSubscription(1, obj, cb)
 };
 
