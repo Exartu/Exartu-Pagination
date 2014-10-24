@@ -4,8 +4,8 @@
  * @param cb
  * @returns {PaginatedHandler}
  */
-Meteor.paginatedSubscribe = function (name, cb) {
-  return new PaginatedHandler(name, cb);
+Meteor.paginatedSubscribe = function (name, cb, options) {
+  return new PaginatedHandler(name, cb, options);
 };
 /**
  * A reactive var
@@ -38,7 +38,7 @@ Hanlders = {};
  * @param cb
  * @constructor
  */
-var PaginatedHandler = function(name, cb){
+var PaginatedHandler = function(name, cb, options){
   var self = this;
   self._ready = new reactive(false);
   self.name = name;
@@ -48,6 +48,14 @@ var PaginatedHandler = function(name, cb){
   self._filter = new reactive({});
   self._isLoading = new reactive(false);
   self._locked = false;
+
+  var options = options || {
+      stopCurrent: true
+  };
+
+  if (Hanlders[name] && options.stopCurrent){
+    Hanlders[name].stop();
+  }
 
   self.handler = Meteor.subscribe(name, 1, function(){
     self._ready.set(true);
