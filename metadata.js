@@ -51,7 +51,8 @@ Metadata = {
 
       pub.ready();
       pub.onStop(function () {
-        console.log('onStop');
+        if (! self.metadatas[metadata.userId]) return;
+
         self.metadatas[metadata.userId][metadata.name].handler.stop();
 
         delete self.metadatas[metadata.userId][metadata.name];
