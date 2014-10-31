@@ -110,9 +110,17 @@ PaginatedHandler.prototype.getFilter = function(){
 PaginatedHandler.prototype.setFilter = function(obj, cb){
   if (_.isEqual(this._filter.value, obj)) return;
 
+  checkQuerySelector(obj);
+
   this._reRunSubscription(1, obj, cb)
 };
+var checkQuerySelector = function (selector) {
+  //get any cursor
+  var cursor = Metadata.find();
 
+  cursor.matcher._compileSelector(selector);
+
+};
 PaginatedHandler.prototype.prev = function(){
   var self= this;
   if (self.currentPage() > 1){
