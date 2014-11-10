@@ -27,11 +27,9 @@ var rendered = new reactive(false);
 Template.defaultPagination.rendered = function(){
   var container = this.$('.pagination-container');
   var containerWidth = container.width();
-  console.log('containerWidth',containerWidth);
   var itemWidth = 43; //the width of the links to pages with 2 digits
   containerWidth -= itemWidth * 6; //at most 6 extra links (next, prev, showNext, showPrev, first and last)
   limit = Math.floor(containerWidth/itemWidth);
-  console.log('limit',limit);
   rendered.set(true);
 
 }
