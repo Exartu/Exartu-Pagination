@@ -56,7 +56,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
       };
     }
 
-    _.extend(selector, originalCursor._cursorDescription.selector);
+    selector = mergeSelectors(selector, originalCursor._cursorDescription.selector);
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
     var finalCursor = collection.find(selector, options);
 
@@ -70,4 +70,24 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
     return finalCursor;
 
   })
+};
+
+var mergeSelectors = function (clientSelector, serverSelector) {
+  var result = {};
+  _.each(['$or', '$and'], function (key) {
+    if (!_.isUndefined(clientSelector[key]) && !_.isUndefined(serverSelector[key])){
+      result.$and = result.$and || [];
+      var aux = {};
+      aux[key] = _.clone(clientSelector[key]);
+      result.$and.push(aux);
+      aux[key] = _.clone(serverSelector[key]);
+      result.$and.push(aux);
+      delete clientSelector[key];
+      delete serverSelector[key];
+    }
+  });
+
+  _.extend(result, clientSelector);
+  _.extend(result, serverSelector);
+  return result;
 };
