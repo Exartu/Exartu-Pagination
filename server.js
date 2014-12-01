@@ -78,10 +78,11 @@ var mergeSelectors = function (clientSelector, serverSelector) {
     if (!_.isUndefined(clientSelector[key]) && !_.isUndefined(serverSelector[key])){
       result.$and = result.$and || [];
       var aux = {};
-      aux[key] = _.clone(clientSelector[key]);
-      result.$and.push(aux);
-      aux[key] = _.clone(serverSelector[key]);
-      result.$and.push(aux);
+      aux[key] = clientSelector[key];
+      result.$and.push(_.clone(aux));
+      aux[key] = serverSelector[key];
+      result.$and.push(_.clone(aux));
+
       delete clientSelector[key];
       delete serverSelector[key];
     }
@@ -89,5 +90,6 @@ var mergeSelectors = function (clientSelector, serverSelector) {
 
   _.extend(result, clientSelector);
   _.extend(result, serverSelector);
+
   return result;
 };
