@@ -30,7 +30,9 @@ reactive.prototype = {
     }
   }
 };
-
+var isEqual = function (obj1, obj2) {
+  return (JSON.stringify(obj1) === JSON.stringify(obj2));
+};
 // keeps created handlers
 Hanlders = {};
 /**
@@ -75,9 +77,9 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, cb) {
 
   //default to current values non-reactively
   page = page || self._page.value;
-  filter = filter || self._filter.value;
+  filter = EJSON.clone(filter) || self._filter.value;
 
-  if (self._page.value == page && _.isEqual(self._filter.value, filter)) return;
+  if (self._page.value == page && isEqual(self._filter.value, filter)) return;
   self._isLoading.set(true);
 
   if (self._locked){
@@ -113,11 +115,11 @@ PaginatedHandler.prototype.getFilter = function(){
   return this._filter.get();
 };
 PaginatedHandler.prototype.setFilter = function(obj, cb){
-  if (_.isEqual(this._filter.value, obj)) return;
+  if (isEqual(this._filter.value, obj)) return;
 
   checkQuerySelector(obj);
 
-  this._reRunSubscription(1, obj, cb)
+  this._reRunSubscription(1, obj, cb);
 };
 var checkQuerySelector = function (selector) {
   //get any cursor
