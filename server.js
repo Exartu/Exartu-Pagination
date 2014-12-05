@@ -23,7 +23,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
   var publicationName = settings.publicationName || collection._name;
 
-  Meteor.publish(publicationName, function(page, clientFilter){
+  Meteor.publish(publicationName, function(page, clientFilter, clientOptions){
     var originalCursor = fn.call(this);
 
     var metadata = {
@@ -38,9 +38,12 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     //get client filter and extend it with the server defined selectors
     var selector = clientFilter || {};
-    var options = {};
+    var options = clientOptions || {};
+
     //add skip and limit
     if (settings.infiniteScroll){
+      //todo: improve infiniteScroll now that it support clientOptions
+
       //if it use infiniteScroll page means total count
       var count = (isInt(page) && page > settings.pageSize) ? page : settings.pageSize;
 
@@ -50,11 +53,12 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
       };
     }else{
       page = (isInt(page) && page > 0) ? page : 1;
-      options = {
-        skip: (page - 1) * settings.pageSize,
-        limit: settings.pageSize
-      };
+      var pageSize = options.limit || settings.pageSize;
+
+      options.skip =  (page - 1) * pageSize;
+      options.limit = pageSize;
     }
+
 
     selector = mergeSelectors(selector, originalCursor._cursorDescription.selector);
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
@@ -64,11 +68,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
     Metadata.add(metadata);
 
-    //if (settings.extraCursors){
-    //  return settings.extraCursors(collection.find(selector, options))
-    //}
     return finalCursor;
-
   })
 };
 

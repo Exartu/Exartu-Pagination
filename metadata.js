@@ -76,15 +76,16 @@ Metadata = {
       self.metadatas[metadata.userId][metadata.name].handler = finalCursor.observeChanges({
         added: function (id) {
           //avoid to notify all added changes when it starts
-          if (!initializing)
+          if (!initializing){
             pub.changed("CollectionsMetadata", metadata.name, {count: finalCursor.count()});
+          }
         },
         removed: function (id) {
           pub.changed("CollectionsMetadata", metadata.name, {count: finalCursor.count()});
         }
       });
       initializing = false;
-      self.published[metadata.userId].changed("CollectionsMetadata", metadata.name, {count: metadata.finalCursor.count()});
+      self.published[metadata.userId].changed("CollectionsMetadata", metadata.name, {count: metadata.finalCursor.count(), pageSize: finalCursor._cursorDescription.options.limit});
 
     }
 
