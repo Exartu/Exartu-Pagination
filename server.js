@@ -23,7 +23,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
   var publicationName = settings.publicationName || collection._name;
 
-  Meteor.publish(publicationName, function(page, clientFilter, clientOptions){
+  Meteor.publish(publicationName, function(page, clientFilter, clientOptions, clientParams){
     var originalCursor = fn.call(this);
 
     var metadata = {
@@ -59,8 +59,9 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
       options.limit = pageSize;
     }
 
-
+    selector = settings.updateSelector ? settings.updateSelector(selector, clientParams) : selector;
     selector = mergeSelectors(selector, originalCursor._cursorDescription.selector);
+
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
     var finalCursor = collection.find(selector, options);
 

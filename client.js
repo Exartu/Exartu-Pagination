@@ -46,21 +46,20 @@ var PaginatedHandler = function(name, cb, options){
     options = options || {
       stopCurrent: true,
       filter: {},
-      options: {}
+      options: {},
+      params: {}
     };
 
   self._ready = new reactive(false);
   self.name = name;
 
-
   self._page = new reactive(1);
   self._total = new reactive(0);
   self._filter = new reactive(options.filter);
   self._options = new reactive(options.options);
+  self._params = new reactive(options.params);
   self._isLoading = new reactive(false);
   self._locked = false;
-
-
 
   if (Hanlders[name] && options.stopCurrent){
     Hanlders[name].stop();
@@ -74,15 +73,20 @@ var PaginatedHandler = function(name, cb, options){
   Hanlders[name] = self;
 };
 
-PaginatedHandler.prototype._reRunSubscription = function (page, filter, options, cb) {
+PaginatedHandler.prototype._reRunSubscription = function (page, filter, options, params, cb) {
   var self = this;
 
   //default to current values non-reactively
   var page = page || self._page.value,
     filter = EJSON.clone(filter) || self._filter.value,
     options = EJSON.clone(options) || self._options.value;
+    params = EJSON.clone(params) || self._params.value;
 
-  if (self._page.value == page && isEqual(self._filter.value, filter)&& isEqual(self._options.value, options)) return;
+  if (self._page.value == page
+    && isEqual(self._filter.value, filter)
+    && isEqual(self._options.value, options)
+    && isEqual(self._params.value, params)) return;
+
   self._isLoading.set(true);
 
   if (self._locked){
@@ -96,7 +100,7 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
   //defer execution of subscription so that the stop called above has time to wipe the collection
   //if I execute subscribe right after a stop the subscription is ignored
   _.defer(function() {
-    self.handler = Meteor.subscribe(self.name, page, filter, options, function () {
+    self.handler = Meteor.subscribe(self.name, page, filter, options, params, function () {
       self._locked = false;
       self._isLoading.set(false);
       cb && cb.call(this)
@@ -105,6 +109,7 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
     self._page.set(page);
     self._filter.set(filter);
     self._options.set(options);
+    self._params.set(params);
   });
 };
 
@@ -112,18 +117,18 @@ PaginatedHandler.prototype.currentPage = function(){
   return this._page.get();
 };
 PaginatedHandler.prototype.setPage = function(page, cb){
-  this._reRunSubscription(page, null, null, cb);
+  this._reRunSubscription(page, null, null, null, cb);
 };
 
 PaginatedHandler.prototype.getFilter = function(){
   return this._filter.get();
 };
-PaginatedHandler.prototype.setFilter = function(obj, cb){
-  if (isEqual(this._filter.value, obj)) return;
+PaginatedHandler.prototype.setFilter = function(obj, params, cb){
+  if (isEqual(this._filter.value, obj) && isEqual(this._params.value, params)) return;
 
   checkQuerySelector(obj);
 
-  this._reRunSubscription(1, obj, null, cb);
+  this._reRunSubscription(1, obj, null, params, cb);
 };
 PaginatedHandler.prototype.getOptions = function(){
   return this._options.get();
@@ -131,7 +136,7 @@ PaginatedHandler.prototype.getOptions = function(){
 PaginatedHandler.prototype.setOptions = function(obj, cb){
   if (isEqual(this._options.value, obj)) return;
 
-  this._reRunSubscription(1, null, obj, cb);
+  this._reRunSubscription(1, null, obj, null, cb);
 };
 
 var checkQuerySelector = function (selector) {
