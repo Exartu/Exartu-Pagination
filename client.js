@@ -6,7 +6,11 @@
  */
 Meteor.paginatedSubscribe = function (name, options, cb) {
   //todo: fix the order of the arguments
-  return new PaginatedHandler(name, cb, options);
+  
+  //fix for iron-router version 1.0.3
+  return Tracker.nonreactive(function () {
+    return new PaginatedHandler(name, cb, options);
+  });
 };
 /**
  * A reactive var
