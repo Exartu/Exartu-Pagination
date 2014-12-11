@@ -64,6 +64,7 @@ var PaginatedHandler = function(name, cb, options){
   self._params = new reactive(options.params);
   self._isLoading = new reactive(false);
   self._locked = false;
+  self._queuedFilter = undefined;
 
   if (Hanlders[name] && options.stopCurrent){
     Hanlders[name].stop();
@@ -94,6 +95,7 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
   self._isLoading.set(true);
 
   if (self._locked){
+    self._queuedFilter = filter;
     return;
   }
 
@@ -106,8 +108,13 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
   _.defer(function() {
     self.handler = Meteor.subscribe(self.name, page, filter, options, params, function () {
       self._locked = false;
-      self._isLoading.set(false);
-      cb && cb.call(this)
+      if (self._queuedFilter) {
+        self.setFilter(self._queuedFilter, params, cb);
+        delete self._queuedFilter;
+      } else {
+        self._isLoading.set(false);
+        cb && cb.call(this)
+      }
     });
 
     self._page.set(page);
