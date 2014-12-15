@@ -59,7 +59,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
       options.limit = pageSize;
     }
 
-    selector = settings.updateSelector ? settings.updateSelector(selector, clientParams) : selector;
+    selector = settings.updateSelector ? settings.updateSelector.call(this, selector, clientParams) : selector;
     selector = mergeSelectors(selector, originalCursor._cursorDescription.selector);
 
     options = _.extend(originalCursor._cursorDescription.options || {}, options);
