@@ -27,7 +27,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
     var originalCursor = fn.call(this);
 
     var metadata = {
-      userId: this.userId,
+      connectionId: this.connection.id,
       cursor: originalCursor,
       pageSize: settings.pageSize,
       infiniteScroll: settings.infiniteScroll,

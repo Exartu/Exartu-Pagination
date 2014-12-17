@@ -1,30 +1,30 @@
 Metadata = {
   metadatas: {},
   add: function (metadata) {
-    this.metadatas[metadata.userId] = this.metadatas[metadata.userId]  || {};
-    var old = this.metadatas[metadata.userId][metadata.name];
-    this.metadatas[metadata.userId][metadata.name] = metadata;
+    this.metadatas[metadata.connectionId] = this.metadatas[metadata.connectionId]  || {};
+    var old = this.metadatas[metadata.connectionId][metadata.name];
+    this.metadatas[metadata.connectionId][metadata.name] = metadata;
 
     if (old) {
       //update finalCursor count
-      if (this.published[metadata.userId]) {
+      if (this.published[metadata.connectionId]) {
         this.updatePublish(metadata, old);
       }
     }else {
-      if (this.published[metadata.userId]){
+      if (this.published[metadata.connectionId]){
         this.publish(metadata);
       }
     }
   },
-  get: function(userId){
-    return this.metadatas[userId];
+  get: function(connectionId){
+    return this.metadatas[connectionId];
   },
   publish: function(metadata){
     var self = this,
       finalCursor = metadata.finalCursor;
     if (finalCursor) {
 
-      var pub = self.published[metadata.userId];
+      var pub = self.published[metadata.connectionId];
       var initializing = true;
 
       var handler = finalCursor.observeChanges({
@@ -38,7 +38,7 @@ Metadata = {
         }
       });
 
-      self.metadatas[metadata.userId][metadata.name].handler = handler;
+      self.metadatas[metadata.connectionId][metadata.name].handler = handler;
 
       initializing = false;
       //send initial values
@@ -51,13 +51,13 @@ Metadata = {
 
       pub.ready();
       pub.onStop(function () {
-        if (! self.metadatas[metadata.userId]) return;
+        if (! self.metadatas[metadata.connectionId]) return;
 
-        self.metadatas[metadata.userId][metadata.name].handler.stop();
+        self.metadatas[metadata.connectionId][metadata.name].handler.stop();
 
-        delete self.metadatas[metadata.userId][metadata.name];
-        if (_.isEmpty(self.metadatas[metadata.userId])){
-          delete self.metadatas[metadata.userId];
+        delete self.metadatas[metadata.connectionId][metadata.name];
+        if (_.isEmpty(self.metadatas[metadata.connectionId])){
+          delete self.metadatas[metadata.connectionId];
         }
       });
     }
@@ -70,10 +70,10 @@ Metadata = {
       finalCursor = metadata.finalCursor;
     if (finalCursor) {
 
-      var pub = this.published[metadata.userId];
+      var pub = this.published[metadata.connectionId];
       var initializing = true;
 
-      self.metadatas[metadata.userId][metadata.name].handler = finalCursor.observeChanges({
+      self.metadatas[metadata.connectionId][metadata.name].handler = finalCursor.observeChanges({
         added: function (id) {
           //avoid to notify all added changes when it starts
           if (!initializing){
@@ -85,7 +85,7 @@ Metadata = {
         }
       });
       initializing = false;
-      self.published[metadata.userId].changed("CollectionsMetadata", metadata.name, {count: metadata.finalCursor.count(), pageSize: finalCursor._cursorDescription.options.limit});
+      self.published[metadata.connectionId].changed("CollectionsMetadata", metadata.name, {count: metadata.finalCursor.count(), pageSize: finalCursor._cursorDescription.options.limit});
 
     }
 
@@ -95,7 +95,7 @@ Metadata = {
     var self = this;
 
     self.published = self.published || {};
-    self.published[pub.userId] = pub;
+    self.published[pub.connection.id] = pub;
   }
 };
 
@@ -103,12 +103,12 @@ Metadata = {
 //publish pageSize and cursor's total count, etc
 Meteor.publish("CollectionsMetadata", function () {
 
-  if (!this.userId) return false;
+  //if (!this.userId) return false;
 
   var self = this;
 
   Metadata.setAsPublished(self);
-  _.each(Metadata.get(self.userId), function (metadata) {
+  _.each(Metadata.get(self.connection.id), function (metadata) {
     Metadata.publish(metadata);
   });
 });
