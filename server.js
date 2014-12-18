@@ -23,8 +23,17 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
 
   var publicationName = settings.publicationName || collection._name;
 
-  Meteor.publish(publicationName, function(page, clientFilter, clientOptions, clientParams){
-    var originalCursor = fn.call(this);
+  Meteor.publish(publicationName, function(arguments){
+    arguments = arguments || {};
+
+
+    var page = arguments.page,
+      clientFilter = arguments.clientFilter,
+      clientOptions = arguments.clientOptions,
+      clientParams = arguments.clientParams,
+      pubArguments =  _.isArray(arguments.pubArguments) ? arguments.pubArguments :  arguments.pubArguments === undefined ? [] : [arguments.pubArguments];
+
+    var originalCursor = fn.apply(this, pubArguments);
 
     var metadata = {
       connectionId: this.connection.id,
@@ -60,6 +69,8 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
     }
 
     selector = settings.updateSelector ? settings.updateSelector.call(this, selector, clientParams) : selector;
+
+
     selector = mergeSelectors(selector, originalCursor._cursorDescription.selector);
 
     options = _.extend(originalCursor._cursorDescription.options || {}, options);

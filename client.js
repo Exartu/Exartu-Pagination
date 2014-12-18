@@ -47,11 +47,12 @@ Hanlders = {};
  */
 var PaginatedHandler = function(name, cb, options){
   var self = this,
-    options = options || {
-      stopCurrent: true,
-      filter: {},
-      options: {},
-      params: {}
+    options = {
+      stopCurrent: options.stopCurrent !== undefined ? options.stopCurrent : true,
+      filter: options.filter || {},
+      options: options.options || {},
+      params: options.params || {},
+      pubArguments: options.pubArguments || {}
     };
 
   self._ready = new reactive(false);
@@ -62,6 +63,8 @@ var PaginatedHandler = function(name, cb, options){
   self._filter = new reactive(options.filter);
   self._options = new reactive(options.options);
   self._params = new reactive(options.params);
+  self._pubArguments = new reactive(options.pubArguments);
+
   self._isLoading = new reactive(false);
   self._locked = false;
   self._queuedFilter = undefined;
@@ -70,7 +73,14 @@ var PaginatedHandler = function(name, cb, options){
     Hanlders[name].stop();
   }
 
-  self.handler = Meteor.subscribe(name, 1, options.filter, function(){
+  //transform arguments
+  var arguments = {
+    page: 1,
+    clientFilter:  options.filter,
+    pubArguments: options.pubArguments
+  }
+
+  self.handler = Meteor.subscribe(name, arguments, function(){
     self._ready.set(true);
     cb && cb.call(this)
   });
@@ -103,10 +113,20 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
 
   if (! self.isInfiniteScroll()) self.handler.stop();
 
+  //transform arguments
+  var args = {
+    page: page,
+    clientFilter:  filter,
+    clientOptions: options,
+    clientParams: params,
+    pubArguments: self._pubArguments.value
+  }
+
+
   //defer execution of subscription so that the stop called above has time to wipe the collection
   //if I execute subscribe right after a stop the subscription is ignored
   _.defer(function() {
-    self.handler = Meteor.subscribe(self.name, page, filter, options, params, function () {
+    self.handler = Meteor.subscribe(self.name, args, function () {
       self._locked = false;
       if (self._queuedFilter) {
         self.setFilter(self._queuedFilter, params, cb);
