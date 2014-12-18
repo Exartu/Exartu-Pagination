@@ -11,7 +11,7 @@ This package allows you to make pagination over meteor's collections
 MyCollection = new Meteor.Collection('myCollectionName')
 
 if (Meteor.isServer){
-  Meteor.paginatedPublish(MyCollection, function () {
+  Meteor.paginatedPublish(MyCollection, function (arg1, arg2) {
     if (!this.userId)
       return false;
   
@@ -26,7 +26,12 @@ if (Meteor.isServer){
 }
 
 if (Meteor.isClient){
-  MyHandler = Meteor.paginatedSubscribe('myCollection');
+  MyHandler = Meteor.paginatedSubscribe('myCollection',{ //optional you can pass:
+    filter: { active: true } // you can pass an initial filter so that you don't have to subscribe and then filter
+    pubArguments: myArguments // you can send an array of arguments and you will receive them in the publish (arg1, arg2)
+                              // if you pass a non-array value you will just one argument (the same as [arg1])
+                              // We should improve this since you can't change it trough the Handler api, but first we will improve some things
+  });
 }
 
 
