@@ -46,13 +46,13 @@ Hanlders = {};
  * @constructor
  */
 var PaginatedHandler = function(name, cb, options){
-  var self = this,
+  var self = this, opt = options || {},
     options = {
-      stopCurrent: options.stopCurrent !== undefined ? options.stopCurrent : true,
-      filter: options.filter || {},
-      options: options.options || {},
-      params: options.params || {},
-      pubArguments: options.pubArguments || {}
+      stopCurrent: opt.stopCurrent !== undefined ? opt.stopCurrent : true,
+      filter: opt.filter || {},
+      options: opt.options || {},
+      params: opt.params || {},
+      pubArguments: opt.pubArguments || {}
     };
 
   self._ready = new reactive(false);
