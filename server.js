@@ -43,7 +43,7 @@ Meteor.paginatedPublish = function (collection, fn, settings) {
       name: publicationName
     };
 
-    if (!originalCursor) return originalCursor;
+    if (!originalCursor || !originalCursor._cursorDescription) return originalCursor;
 
     //get client filter and extend it with the server defined selectors
     var selector = clientFilter || {};
