@@ -1,10 +1,15 @@
-Template.paginationTemplate.context = function () {
-  this.handler= Hanlders[this.name];
-  return this;
-};
-Template.defaultView.isInfiniteScroll= function(){
-  return this.handler.isInfiniteScroll();
-};
+Template.paginationTemplate.helpers({
+  context: function () {
+    this.handler = Hanlders[this.name];
+    return this;
+  }
+});
+
+Template.defaultView.helpers({
+  isInfiniteScroll: function () {
+    return this.handler.isInfiniteScroll();
+  }
+});
 
 var keyListener = function (e) {
   if (e.target.tagName == 'INPUT') return;
