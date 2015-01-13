@@ -1,7 +1,7 @@
 Package.describe({
   name: 'aida:pagination',
   summary: "pagination package from Uruworks",
-  version: "0.1.0",
+  version: "0.1.1",
   git: "https://github.com/Exartu/Exartu-Pagination.git"
 });
 
