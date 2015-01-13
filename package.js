@@ -6,13 +6,13 @@ Package.describe({
 });
 
 Package.onUse(function (api, where) {
-  api.use(['templating','underscore', 'deps'],'client');
-  api.use('aida:mongo-view@0.1.1','server',{ weak: true });
 
+  api.versionsFrom('METEOR@0.9.2');
   api.addFiles(['metadata.js'], 'server');
   api.addFiles(['server.js'], 'server');
   api.addFiles(['client.js'], 'client');
   api.addFiles(['view.html'], 'client');
   api.addFiles(['view.js'], 'client');
+  api.use('aida:mongo-view@0.1.1','server',{ weak: true });
 });
 
