@@ -1,6 +1,26 @@
+/**
+ * @todo review the pre & post render callbacks.
+ * - the only reason I added this was because I needed to have the option to call a function after the pager is rendered.
+ * - this is related to the "pagination styling bug".
+ *
+ * Bug description: when trying to add some styles, custom class, wrapper or simply overwriting the pager's container and
+ * sub elements, outside of the widget, it would stop functioning normally. It would stop rendering the page links. Adding
+ * styling or custom class post rendering seems to fix it.
+ * @type {null}
+ */
+
+var preRenderCallback = null; // javascript code called before rendering the main pagination widget template
+var postRenderCallback = null;// javascript code called after rendering the main pagination widget template
+
 Template.paginationTemplate.helpers({
   context: function () {
     this.handler = Hanlders[this.name];
+
+    if(this.preRenderCallback)
+      preRenderCallback = this.preRenderCallback;
+    if(this.postRenderCallback)
+      postRenderCallback = this.postRenderCallback;
+
     return this;
   }
 });
@@ -30,6 +50,9 @@ var keyListener = function (e) {
 
 var rendered = new reactive(false);
 Template.defaultPagination.rendered = function(){
+  if(preRenderCallback)
+    eval( preRenderCallback );
+
   var container = this.$('.pagination-container');
   var containerWidth = container.width();
   var itemWidth = 43; //the width of the links to pages with 2 digits
@@ -37,6 +60,8 @@ Template.defaultPagination.rendered = function(){
   limit = Math.floor(containerWidth/itemWidth);
   rendered.set(true);
 
+  if(postRenderCallback)
+    eval( postRenderCallback );
 }
 Template.defaultPagination.created = function(){
   if (this.data.useKeys) {
