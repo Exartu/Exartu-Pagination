@@ -7,7 +7,7 @@ Package.describe({
 
 Package.onUse(function (api, where) {
 
-  api.versionsFrom('METEOR@1.0.4');
+  api.versionsFrom('METEOR@1.0.3.1');
   api.use(['templating','underscore', 'deps'],'client');
   api.use('aida:mongo-view@0.1.1','server',{ weak: true });
   
