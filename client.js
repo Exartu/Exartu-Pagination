@@ -131,11 +131,10 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
       if (self._queuedFilter) {
         self.setFilter(self._queuedFilter, params, cb);
         delete self._queuedFilter;
-        self._isLoading.set(false);
-      } else {
-        self._isLoading.set(false);
-        cb && cb.call(this)
-      }
+      } 
+      self._isLoading.set(false);
+      cb && cb.call(this)
+      
     });
 
     self._page.set(page);
