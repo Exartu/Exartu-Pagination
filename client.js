@@ -149,26 +149,35 @@ PaginatedHandler.prototype.currentPage = function () {
     return this._page.get();
 };
 PaginatedHandler.prototype.setPage = function (page, cb) {
-    this._reRunSubscription(page, null, null, null, cb);
+    var self = this;
+    Tracker.nonreactive(function () {
+        self._reRunSubscription(page, null, null, null, cb);
+    });
 };
 
 PaginatedHandler.prototype.getFilter = function () {
     return this._filter.get();
 };
 PaginatedHandler.prototype.setFilter = function (obj, params, cb) {
-    if (isEqual(this._filter.value, obj) && isEqual(this._params.value, params)) return;
+    var self = this;
+    Tracker.nonreactive(function () {
+        if (isEqual(self._filter.value, obj) && isEqual(this._params.value, params)) return;
 
-    checkQuerySelector(obj);
+        checkQuerySelector(obj);
 
-    this._reRunSubscription(1, obj, null, params, cb);
+        self._reRunSubscription(1, obj, null, params, cb);
+    });
 };
 PaginatedHandler.prototype.getOptions = function () {
     return this._options.get();
 };
 PaginatedHandler.prototype.setOptions = function (obj, cb) {
-    if (isEqual(this._options.value, obj)) return;
+    var self = this;
+    Tracker.nonreactive(function () {
+        if (isEqual(self._options.value, obj)) return;
 
-    this._reRunSubscription(1, null, obj, null, cb);
+        self._reRunSubscription(1, null, obj, null, cb);
+    });
 };
 
 var checkQuerySelector = function (selector) {
