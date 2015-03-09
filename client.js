@@ -102,14 +102,14 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
         && isEqual(self._options.value, options)
         && isEqual(self._params.value, params)) return;
 
-    self._isLoading.set(true);
 
     if (self._locked) {
         self._queuedFilter = filter;
         return;
     }
-
     self._locked = true;
+
+    self._isLoading.set(true);
 
     if (!self.isInfiniteScroll()) self.handler.stop();
 
