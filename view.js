@@ -15,12 +15,7 @@ var postRenderCallback = null;// javascript code called after rendering the main
 Template.paginationTemplate.helpers({
   context: function () {
     this.handler = Hanlders[this.name];
-
-    if(this.preRenderCallback)
-      preRenderCallback = this.preRenderCallback;
-    if(this.postRenderCallback)
-      postRenderCallback = this.postRenderCallback;
-
+    if (!this.handler) return null;
     return this;
   }
 });
@@ -65,18 +60,20 @@ Template.defaultPagination.rendered = function(){
 
 };
 Template.defaultPagination.created = function(){
-  if (this.data.useKeys) {
-    keyListener = _.bind(keyListener, this)
+  var data = this.data;
+
+  if (data.useKeys) {
+    keyListener = _.bind(keyListener, this);
     $(document).keydown(keyListener);
   }
 
-  var self = this.data;
+  if (! data.handler) return;
 
   //auto slice pagesToShow to fit in one line
-  Meteor.autorun(function(){
+  this.autorun(function(){
     if (! rendered.get()) return;
-    var pageCount = self.handler.pageCount();
-    var current = self.handler.currentPage();
+    var pageCount = data.handler.pageCount();
+    var current = data.handler.currentPage();
     var aux;
     if (pageCount > limit){
       var min = 0;

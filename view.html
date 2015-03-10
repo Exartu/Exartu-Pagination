@@ -1,5 +1,7 @@
 <template name="paginationTemplate">
-    {{> UI.contentBlock context}}
+    {{#if context}}
+        {{> UI.contentBlock context}}
+    {{/if}}
 </template>
 
 <template name="fastPagination">
@@ -7,6 +9,7 @@
         {{>defaultView .}}
     {{/paginationTemplate}}
 </template>
+
 <template name="defaultView">
     {{#if isInfiniteScroll}}
         {{>defaultInfiniteScroll .}}
@@ -14,6 +17,7 @@
         {{>defaultPagination .}}
     {{/if}}
 </template>
+
 <template name="defaultPagination">
     <div class="pagination-container {{containerClass}}" >
         {{#if hasPages}}
