@@ -161,7 +161,7 @@ PaginatedHandler.prototype.getFilter = function () {
 PaginatedHandler.prototype.setFilter = function (obj, params, cb) {
     var self = this;
     Tracker.nonreactive(function () {
-        if (isEqual(self._filter.value, obj) && isEqual(this._params.value, params)) return;
+        if (isEqual(self._filter.value, obj) && isEqual(self._params.value, params)) return;
 
         checkQuerySelector(obj);
 
@@ -238,7 +238,7 @@ PaginatedHandler.prototype.currentCount = function () {
     try {
         return Meteor.connection._mongo_livedata_collections[this.name].find().count();
     } catch (e) {
-        console.error(e)
+        console.error(e);
         return;
     }
 };
