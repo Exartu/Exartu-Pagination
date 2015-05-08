@@ -127,7 +127,6 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
     //if I execute subscribe right after a stop the subscription is ignored
     _.defer(function () {
         self.handler = Meteor.subscribe(self.name, args, function () {
-            console.log('which pagination version? 400')
             self._locked = false;
             if (self._queuedFilter) {
                 self.setFilter(self._queuedFilter, params, cb);
