@@ -104,7 +104,7 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
 
 
     if (self._locked) {
-        self._queuedFilter = filter;
+        self._queuedArgs = EJSON.clone(arguments);
         return;
     }
     self._locked = true;
@@ -128,20 +128,19 @@ PaginatedHandler.prototype._reRunSubscription = function (page, filter, options,
     _.defer(function () {
         self.handler = Meteor.subscribe(self.name, args, function () {
             self._locked = false;
-            if (self._queuedFilter) {
-                self.setFilter(self._queuedFilter, params, cb);
-                delete self._queuedFilter;
+            if (self._queuedArgs) {
+                self._reRunSubscription.apply(self, self._queuedArgs);
+                delete self._queuedArgs;
             }
             self._isLoading.set(false);
             cb && cb.call(this)
-
         });
-
-        self._page.set(page);
-        self._filter.set(filter);
-        self._options.set(options);
-        self._params.set(params);
     });
+
+    self._page.set(page);
+    self._filter.set(filter);
+    self._options.set(options);
+    self._params.set(params);
 };
 
 PaginatedHandler.prototype.currentPage = function () {
