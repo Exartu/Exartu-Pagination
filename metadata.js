@@ -49,7 +49,7 @@ Metadata = {
         infiniteScroll: metadata.infiniteScroll
       });
 
-      pub.ready();
+
       pub.onStop(function () {
         if (! self.metadatas[metadata.connectionId]) return;
 
@@ -111,4 +111,5 @@ Meteor.publish("CollectionsMetadata", function () {
   _.each(Metadata.get(self.connection.id), function (metadata) {
     Metadata.publish(metadata);
   });
+  self.ready();
 });
