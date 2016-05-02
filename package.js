@@ -1,12 +1,12 @@
 Package.describe({
   name: 'aida:pagination',
   summary: "pagination package from Uruworks",
-  version: "1.0.11",
+  version: "1.0.12",
   git: "https://github.com/Exartu/Exartu-Pagination.git"
 });
 
 Package.onUse(function (api, where) {
-  api.versionsFrom('METEOR@1.0.3.1');
+  api.versionsFrom('METEOR@0.9.2');
   api.use(['templating','underscore', 'deps'],'client');
   api.use('aida:mongo-view@0.1.2','server',{ weak: true });
   
