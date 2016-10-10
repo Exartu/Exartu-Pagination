@@ -47,7 +47,17 @@
             <li class="{{#if isInLastPage}} disabled {{/if}}">
                 <a style="cursor: pointer" class="next-page" title="next"> &gt; </a>
             </li>
-        </ul>
+            <li>
+                <span style="padding:10px">
+                  <!--<input type="text" class="form-control" id="go-toPage" placeholder="go to" >-->
+                <div class="input-group"  style="width:85px">
+                    <input id="goto-page-input" type="text" class="form-control" aria-describedby="basic-addon2">
+                    <span id="goto-page" class="input-group-addon" >go</span>
+                </div>
+                </span>
+            </li>
+            </ul>
+
         {{/if}}
     </div>
 </template>

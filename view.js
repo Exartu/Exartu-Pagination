@@ -99,6 +99,7 @@ Template.defaultPagination.destroyed = function(){
   }
 };
 
+var pageGoTo;
 var pagesToShow = new reactive([]);
 var limit = 10;
 
@@ -154,6 +155,14 @@ Template.defaultPagination.events({
     var min = Math.min(pageCount - limit, shown[shown.length - 1]);
     min = min + 1;
     pagesToShow.set(getIntArray(min, min + limit));
+  },
+  'click #goto-page': function(e, ctx){
+    if(pageGoTo && !_.isNaN(pageGoTo)) {
+      ctx.data.handler.setPage(pageGoTo);
+    }
+  },
+  'change #goto-page-input': function(e){
+    pageGoTo = parseInt(e.target.value)
   }
 });
 
