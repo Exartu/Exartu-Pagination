@@ -47,12 +47,14 @@
             <li class="{{#if isInLastPage}} disabled {{/if}}">
                 <a style="cursor: pointer" class="next-page" title="next"> &gt; </a>
             </li>
-            <li>
+            <li class="visible-md-inline visible-lg-inline">
                 <span style="padding:10px">
                   <!--<input type="text" class="form-control" id="go-toPage" placeholder="go to" >-->
-                <div class="input-group"  style="width:50px">
-                    <input id="goto-page-input" type="text" class="form-control" aria-describedby="basic-addon2" style="padding:2px">
-                    <span id="goto-page" class="input-group-addon" style="padding:3px"><i class="fa fa-arrow-right"></i></span>
+                <div class="visible-md-inline visible-lg-inline">
+                    <div class="input-group"  style="width:50px">
+                       <input id="goto-page-input" type="text" class="form-control" aria-describedby="basic-addon2" style="padding:2px">
+                       <span id="goto-page" class="input-group-addon" style="padding:3px"><i class="fa fa-arrow-right"></i></span>
+                    </div>
                 </div>
                 </span>
             </li>
